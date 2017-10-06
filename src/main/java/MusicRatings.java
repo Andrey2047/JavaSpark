@@ -1,13 +1,7 @@
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.mllib.stat.Statistics;
-import scala.Tuple1;
 import scala.Tuple2;
-
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by andriiko on 3/10/2017.
