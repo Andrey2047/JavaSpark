@@ -15,6 +15,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.mllib.linalg.Vectors;
 import scala.Tuple2;
 
 import java.io.IOException;
@@ -90,26 +91,14 @@ public class WikipediaLatentSemanticsAnalysys {
                         .stream()
                         .collect(Collectors.toMap(Tuple2::_1, Tuple2::_2));
 
+        Map<String, Double> idfFreqs = calculateInverseDocumentFreqs(docFreqs, numDocs);
 
-//        JavaRDD<Map<String, Double>> tfDocTermsFreqs = docTermsFreqs.map(v1 -> {
-//            double allWordsCount = v1.values().stream().mapToLong(value -> value).sum();
-//            return v1.keySet().stream().collect(Collectors.toMap(o -> o, o -> v1.get(o) / allWordsCount));
-//        });
-//
-          Map<String, Double> idfFreqs = calculateInverseDocumentFreqs(docFreqs, numDocs);
+        Map<String, Double> bIdfs = context.broadcast(idfFreqs).getValue();
 
-          System.out.print(idfFreqs);
-//
-//        int documentsCount = (int) tfDocTermsFreqs.count();
-//
-//        JavaRDD<Map<String, Double>> idfDocTermsFreqs = lemmasRDD.map(v1 -> {
-//            Map<String, Long> collect = v1.stream().collect(Collectors.groupingBy(o -> o, Collectors.counting()));
-//            double allWordsCount = collect.values().stream().mapToLong(value -> value).sum();
-//            return collect.keySet().stream().collect(Collectors.toMap(o -> o, o -> collect.get(o) / allWordsCount));
-//        });
-
-//        tfDocTermsFreqs.take(5).forEach(System.out::println);
-
+        JavaRDD<Map<String, Double>> termDocumentMatrix = docTermsFreqs.map(documentTermsFreqs -> {
+            Long docTotalTerms = documentTermsFreqs.values().stream().reduce(0L, (aLong, aLong2) -> aLong + aLong2);
+            return documentTermsFreqs.keySet().stream().collect(Collectors.toMap(o -> o, o -> bIdfs.get(o) * documentTermsFreqs.get(o) / docTotalTerms));
+        });
 
     }
 
